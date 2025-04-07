@@ -20,11 +20,13 @@ public struct LoginView: View {
     @EnvironmentObject var kakaoAuth: KaKaoAuthCore
 
     @State private var hasAccessToken = false
-    
+    @State private var isShowTermsAgreeSheet = false
+    @State var isRequiredTermsAgreed = false
+
     public init() {
         KakaoSDK.initSDK(appKey: APPKey.kakaoAppKey)
     }
-    
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -44,7 +46,8 @@ public struct LoginView: View {
                     kakaoAuth.loginKakaoAccount() { success in
                         if success {
                             print("카카오 로그인 성공")
-                            hasAccessToken = true
+                            //hasAccessToken = true
+                            isShowTermsAgreeSheet = true
                         } else {
                             print("카카오 로그인 실패")
                             hasAccessToken = false
@@ -56,7 +59,7 @@ public struct LoginView: View {
                 }
                 HStack(spacing: 8) {
                     gray400WithLineButton("둘러보기") {
-                        hasAccessToken = true
+                        //  TODO: 둘러보기
                     }
                     Divider()
                         .frame(width: 1.5, height: 16)
@@ -79,23 +82,12 @@ public struct LoginView: View {
                     hasAccessToken = true
                 }
             }
-            .navigationDestination(isPresented: $hasAccessToken) {
-                HomeView()
-                    .navigationBarBackButtonHidden()
-                    .overlay(alignment: .bottom) {
-                        NavigationLink {
-                            WebView()
-                        } label: {
-                            Text("WebView 연결")
-                                .font(.mgTitle2)
-                                .foregroundStyle(Color.mongleGrayScale0)
-                                .padding(.vertical, 17)
-                                .frame(maxWidth: .infinity)
-                                .background(Color.mongleColorPrimary300)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                        }
-                        
-                    }
+            .sheet(isPresented: $isShowTermsAgreeSheet) {
+                AgreeTermsSheet(isRequiredTermsAgreed: $isRequiredTermsAgreed)
+                    .presentationDetents([.medium])
+            }
+            .navigationDestination(isPresented: $isRequiredTermsAgreed) {
+                PhoneNumberVerificationView()
             }
         }
     }
